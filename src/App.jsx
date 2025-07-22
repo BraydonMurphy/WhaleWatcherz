@@ -6,11 +6,20 @@ function App() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
 
-  const handleSearch = async () => {
-    const data = await searchPairs(query);
-    setResults(data);
-  };
+const handleSearch = async () => {
+  const data = await searchPairs(query);
 
+  // Check and filter top whale trades (>$100k)
+  const whaleTrades = data.filter((pair) => {
+    const price = parseFloat(pair.priceUsd || 0);
+    const volume = parseFloat(pair.baseToken?.volume?.h24 || 0);
+    const usdValue = price * volume;
+    return usdValue >= 100000; // Only show if over $100k
+  });
+
+  // Fallback if no whale trades
+  setResults(whaleTrades.length > 0 ? whaleTrades : data);
+};
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
       <h1 className="text-4xl font-bold text-center mb-6">
@@ -45,7 +54,9 @@ function App() {
             />
           ))
         ) : (
-          <p className="text-center text-gray-400">No results yet. Try a search above.</p>
+          <p className="text-center text-gray-400">
+            No results yet. Try a search above.
+          </p>
         )}
       </div>
     </div>
